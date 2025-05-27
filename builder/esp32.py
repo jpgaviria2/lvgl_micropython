@@ -158,7 +158,7 @@ def get_espidf():
         ]
     ]
     print()
-    print(f'collecting ESP-IDF v5.2.3')
+    print(f'collecting ESP-IDF v5.4.0')
     print('this might take a while...')
     result, _ = spawn(cmd, spinner=True)
     if result != 0:
@@ -639,7 +639,7 @@ set_displays = []
 
 
 def build_manifest(
-    target, script_dir, lvgl_api, displays, indevs, expanders, frozen_manifest
+    target, script_dir, lvgl_api, displays, indevs, expanders, imus, frozen_manifest
 ):
     _update_mphalport(target)
 
@@ -659,7 +659,7 @@ def build_manifest(
 
     set_displays.extend(generate_manifest(
         script_dir, lvgl_api, manifest_path,
-        displays, indevs, expanders, frozen_manifest
+        displays, indevs, expanders, imus, frozen_manifest
         # f'{script_dir}/api_drivers/common_api_drivers/frozen/other/spi3wire.py'
     ))
 
@@ -918,7 +918,7 @@ def submodules():
         ['./install.sh', 'all']
     ]
 
-    print(f'setting up ESP-IDF v5.2.3')
+    print(f'setting up ESP-IDF v5.4.0')
     print('this might take a while...')
     env = {k: v for k, v in os.environ.items()}
     env['IDF_PATH'] = os.path.abspath(idf_path)
