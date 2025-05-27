@@ -91,15 +91,22 @@ def build_commands(_, extra_args, script_dir, lv_cflags, board):
             f'USER_C_MODULES="{script_dir}/ext_mod"',
             (
                 '"CFLAGS_EXTRA='
+                '-g -O0 -ggdb ' # this works but only for ext_modules...
+                '-DMODULE_SECP256K1_ENABLED=1 '
                 '-Wno-sign-compare '
                 '-Wno-unused-function '
                 '-Wno-double-promotion '
                 '-Wno-unused-command-line-argument '
+                '-Wno-error=old-style-declaration '
+                '-Wno-error=float-conversion '
+                '-Wno-error=unused-variable '
                 '-Wno-missing-field-initializers"'
                 # 'export CPPFLAGS="-I/opt/homebrew/opt/libffi/include"'
+                # '-fsanitize=address ' errors
             )
         ]
     )
+    print(f"unix_cmd: {unix_cmd}")
 
     # unix_cmd.extend(extra_args)
 
