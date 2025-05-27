@@ -167,7 +167,7 @@ void rgb565_byte_swap(void *buf, uint32_t buf_size_px)
             LCD_UNUSED(rotation);
             LCD_UNUSED(last_update);
 
-            LCD_DEBUG_PRINT("lcd_panel_io_tx_color(self, lcd_cmd=%d, color, color_size=%d)\n", lcd_cmd, color_size)
+            // too slow: LCD_DEBUG_PRINT("lcd_panel_io_tx_color(self, lcd_cmd=%d, color, color_size=%d)\n", lcd_cmd, color_size)
             return esp_lcd_panel_io_tx_color(self->panel_io_handle.panel_io, lcd_cmd, color, color_size);
         } else {
             return self->panel_io_handle.tx_color(obj, lcd_cmd, color, color_size, x_start, y_start, x_end, y_end, rotation, last_update);
