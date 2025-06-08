@@ -158,6 +158,12 @@ MOD_KEY_SHIFT = MOD_KEY_LSHIFT | MOD_KEY_RSHIFT
 MOD_KEY_ALT = MOD_KEY_LALT | MOD_KEY_RALT
 MOD_KEY_META = MOD_KEY_LMETA | MOD_KEY_RMETA
 
+# SDL keycode ranges
+SDL_ARROW_KEY_START = 1073741903  # Right Arrow
+SDL_ARROW_KEY_END = 1073741906    # Down Arrow
+SDL_KEYPAD_KEY_START = 1073741908 # Keypad /
+SDL_KEYPAD_KEY_END = 1073741923   # Keypad .
+
 # Shift key mappings for QWERTY layout
 SHIFT_KEY_MAP = {
     KEY_1: KEY_EXCLAIM,         # 1 -> !
@@ -205,14 +211,12 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
         _, state, key, mod = args
         print(f"sdl_keyboard.py _keypad_cb got {_}, {state} {key} {mod}")
 
-        # Skip modifier keys and SDL-specific large keycodes (>= 2^30), except keypad keys
+        # Skip modifier keys and SDL-specific large keycodes (>= 2^30), except keypad and arrow keys
         if (key in {KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL, KEY_LALT, KEY_RALT,
                     KEY_LMETA, KEY_RMETA, KEY_LSUPER, KEY_RSUPER, KEY_MODE, KEY_COMPOSE,
                     KEY_NUMLOCK, KEY_CAPSLOCK, KEY_SCROLLOCK} or
-                (key >= 1 << 30 and key not in {1073741908, 1073741909, 1073741910, 1073741911,
-                                                1073741912, 1073741913, 1073741914, 1073741915,
-                                                1073741916, 1073741917, 1073741918, 1073741919,
-                                                1073741920, 1073741921, 1073741922, 1073741923})):
+                (key >= 1 << 30 and not (SDL_ARROW_KEY_START <= key <= SDL_ARROW_KEY_END or
+                                         SDL_KEYPAD_KEY_START <= key <= SDL_KEYPAD_KEY_END))):
             self.__last_key = -1  # Do not send modifier keys to LVGL
             return
 
@@ -221,10 +225,7 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
 
         # Handle numeric keypad keys (SDL keycodes and original KEYPAD_* range)
         if (KEYPAD_0 <= key <= KEYPAD_EQUALS or
-                key in {1073741908, 1073741909, 1073741910, 1073741911, 1073741912,
-                        1073741913, 1073741914, 1073741915, 1073741916, 1073741917,
-                        1073741918, 1073741919, 1073741920, 1073741921, 1073741922,
-                        1073741923}):
+                SDL_KEYPAD_KEY_START <= key <= SDL_KEYPAD_KEY_END):
             if mod & MOD_KEY_NUM:
                 mapping = {
                     KEYPAD_0: KEY_0,
@@ -316,7 +317,11 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
                 KEY_HOME: lv.KEY.HOME,  # NOQA
                 KEY_END: lv.KEY.END,  # NOQA
                 KEY_PAGEDOWN: lv.KEY.PREV,  # NOQA
-                KEY_PAGEUP: lv.KEY.NEXT  # NOQA
+                KEY_PAGEUP: lv.KEY.NEXT,  # NOQA
+                1073741903: lv.KEY.RIGHT,   # SDL Right Arrow
+                1073741904: lv.KEY.LEFT,    # SDL Left Arrow
+                1073741905: lv.KEY.UP,      # SDL Up Arrow
+                1073741906: lv.KEY.DOWN     # SDL Down Arrow
             }
 
             # Handle Shift or Caps Lock for letters and symbols
