@@ -2,7 +2,7 @@
 
 from micropython import const  # NOQA
 import lvgl as lv
-import micropython  # NQQA  # NOQA
+import micropython  # NOQA  # NOQA
 import keypad_framework
 
 
@@ -50,9 +50,11 @@ KEY_AT = 64  # @
 KEY_LEFTBRACKET = 91  # [
 KEY_BACKSLASH = 92  # \
 KEY_RIGHTBRACKET = 93  # ]
-KEY_CARET = 94  # |
+KEY_CARET = 94  # ^
 KEY_UNDERSCORE = 95  # _
 KEY_BACKQUOTE = 96  # `
+KEY_a = 97  # a
+KEY_z = 122  # z
 KEY_DELETE = 127  # LV_KEY_DEL
 
 # Numeric keypad
@@ -156,6 +158,31 @@ MOD_KEY_SHIFT = MOD_KEY_LSHIFT | MOD_KEY_RSHIFT
 MOD_KEY_ALT = MOD_KEY_LALT | MOD_KEY_RALT
 MOD_KEY_META = MOD_KEY_LMETA | MOD_KEY_RMETA
 
+# Shift key mappings for QWERTY layout
+SHIFT_KEY_MAP = {
+    KEY_1: KEY_EXCLAIM,         # 1 -> !
+    KEY_2: KEY_AT,             # 2 -> @
+    KEY_3: KEY_HASH,           # 3 -> #
+    KEY_4: KEY_DOLLAR,         # 4 -> $
+    KEY_5: 37,                 # 5 -> % (ASCII 37)
+    KEY_6: KEY_CARET,          # 6 -> ^
+    KEY_7: KEY_AMPERSAND,      # 7 -> &
+    KEY_8: KEY_ASTERISK,       # 8 -> *
+    KEY_9: KEY_LEFTPAREN,      # 9 -> (
+    KEY_0: KEY_RIGHTPAREN,     # 0 -> )
+    KEY_MINUS: KEY_UNDERSCORE, # - -> _
+    KEY_EQUALS: KEY_PLUS,      # = -> +
+    KEY_LEFTBRACKET: 123,      # [ -> { (ASCII 123)
+    KEY_RIGHTBRACKET: 125,     # ] -> } (ASCII 125)
+    KEY_BACKSLASH: 124,        # \ -> | (ASCII 124)
+    KEY_SEMICOLON: KEY_COLON,  # ; -> :
+    KEY_QUOTE: KEY_QUOTEDBL,   # ' -> "
+    KEY_COMMA: KEY_LESS,       # , -> <
+    KEY_PERIOD: KEY_GREATER,   # . -> >
+    KEY_SLASH: KEY_QUESTION,   # / -> ?
+    KEY_BACKQUOTE: 126,        # ` -> ~ (ASCII 126)
+}
+
 
 class SDLKeyboard(keypad_framework.KeypadDriver):
 
@@ -176,6 +203,17 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
 
     def _keypad_cb(self, *args):
         _, state, key, mod = args
+        print(f"sdl_keyboard.py _keypad_cb got {_}, {state} {key} {mod}")
+
+        # Skip modifier keys and SDL-specific large keycodes (>= 2^30)
+        if (key in {KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL, KEY_LALT, KEY_RALT,
+                    KEY_LMETA, KEY_RMETA, KEY_LSUPER, KEY_RSUPER, KEY_MODE, KEY_COMPOSE,
+                    KEY_NUMLOCK, KEY_CAPSLOCK, KEY_SCROLLOCK} or key >= 1 << 30):
+            self.__last_key = -1  # Do not send modifier keys to LVGL
+            return
+
+        if key == KEY_PAUSE:
+            return
 
         if KEYPAD_0 <= key <= KEYPAD_EQUALS:
             if mod == MOD_KEY_NUM:
@@ -220,8 +258,6 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
                 }
 
             self.__last_key = mapping[key]
-        elif key == KEY_PAUSE:
-            return
         else:
             mapping = {
                 KEY_BACKSPACE: lv.KEY.BACKSPACE,  # NOQA
@@ -238,7 +274,17 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
                 KEY_PAGEDOWN: lv.KEY.PREV,  # NOQA
                 KEY_PAGEUP: lv.KEY.NEXT  # NOQA
             }
-            self.__last_key = mapping.get(key, key)
+
+            # Handle Shift or Caps Lock for letters and symbols
+            if mod & (MOD_KEY_SHIFT | MOD_KEY_CAPS) and KEY_a <= key <= KEY_z:
+                # Convert lowercase to uppercase
+                self.__last_key = key - 32  # ASCII lowercase to uppercase
+            elif mod & MOD_KEY_SHIFT and key in SHIFT_KEY_MAP:
+                # Apply Shift mapping for numbers and punctuation
+                self.__last_key = SHIFT_KEY_MAP[key]
+            else:
+                # Use standard mapping or key as-is
+                self.__last_key = mapping.get(key, key)
 
         if state:
             self.__current_state = self.PRESSED
@@ -249,3 +295,4 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
 
     def _get_key(self):
         return self.__current_state, self.__last_key
+
