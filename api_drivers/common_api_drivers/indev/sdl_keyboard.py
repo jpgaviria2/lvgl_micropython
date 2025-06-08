@@ -205,18 +205,27 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
         _, state, key, mod = args
         print(f"sdl_keyboard.py _keypad_cb got {_}, {state} {key} {mod}")
 
-        # Skip modifier keys and SDL-specific large keycodes (>= 2^30)
+        # Skip modifier keys and SDL-specific large keycodes (>= 2^30), except keypad keys
         if (key in {KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL, KEY_LALT, KEY_RALT,
                     KEY_LMETA, KEY_RMETA, KEY_LSUPER, KEY_RSUPER, KEY_MODE, KEY_COMPOSE,
-                    KEY_NUMLOCK, KEY_CAPSLOCK, KEY_SCROLLOCK} or key >= 1 << 30):
+                    KEY_NUMLOCK, KEY_CAPSLOCK, KEY_SCROLLOCK} or
+                (key >= 1 << 30 and key not in {1073741908, 1073741909, 1073741910, 1073741911,
+                                                1073741912, 1073741913, 1073741914, 1073741915,
+                                                1073741916, 1073741917, 1073741918, 1073741919,
+                                                1073741920, 1073741921, 1073741922, 1073741923})):
             self.__last_key = -1  # Do not send modifier keys to LVGL
             return
 
         if key == KEY_PAUSE:
             return
 
-        if KEYPAD_0 <= key <= KEYPAD_EQUALS:
-            if mod == MOD_KEY_NUM:
+        # Handle numeric keypad keys (SDL keycodes and original KEYPAD_* range)
+        if (KEYPAD_0 <= key <= KEYPAD_EQUALS or
+                key in {1073741908, 1073741909, 1073741910, 1073741911, 1073741912,
+                        1073741913, 1073741914, 1073741915, 1073741916, 1073741917,
+                        1073741918, 1073741919, 1073741920, 1073741921, 1073741922,
+                        1073741923}):
+            if mod & MOD_KEY_NUM:
                 mapping = {
                     KEYPAD_0: KEY_0,
                     KEYPAD_1: KEY_1,
@@ -234,7 +243,23 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
                     KEYPAD_MINUS: KEY_MINUS,
                     KEYPAD_PLUS: KEY_PLUS,
                     KEYPAD_ENTER: KEY_EQUALS,
-                    KEYPAD_EQUALS: KEY_EQUALS
+                    KEYPAD_EQUALS: KEY_EQUALS,
+                    1073741908: KEY_SLASH,      # Keypad /
+                    1073741909: KEY_ASTERISK,   # Keypad *
+                    1073741910: KEY_MINUS,      # Keypad -
+                    1073741911: KEY_PLUS,       # Keypad +
+                    1073741912: lv.KEY.ENTER,   # Keypad ENTER
+                    1073741913: KEY_1,          # Keypad 1
+                    1073741914: KEY_2,          # Keypad 2
+                    1073741915: KEY_3,          # Keypad 3
+                    1073741916: KEY_4,          # Keypad 4
+                    1073741917: KEY_5,          # Keypad 5
+                    1073741918: KEY_6,          # Keypad 6
+                    1073741919: KEY_7,          # Keypad 7
+                    1073741920: KEY_8,          # Keypad 8
+                    1073741921: KEY_9,          # Keypad 9
+                    1073741922: KEY_0,          # Keypad 0
+                    1073741923: KEY_PERIOD      # Keypad .
                 }
             else:
                 mapping = {
@@ -254,10 +279,29 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
                     KEYPAD_MINUS: KEY_MINUS,
                     KEYPAD_PLUS: KEY_PLUS,
                     KEYPAD_ENTER: lv.KEY.ENTER,  # NOQA
-                    KEYPAD_EQUALS: KEY_EQUALS
+                    KEYPAD_EQUALS: KEY_EQUALS,
+                    1073741908: KEY_SLASH,      # Keypad /
+                    1073741909: KEY_ASTERISK,   # Keypad *
+                    1073741910: KEY_MINUS,      # Keypad -
+                    1073741911: KEY_PLUS,       # Keypad +
+                    1073741912: lv.KEY.ENTER,   # Keypad ENTER
+                    1073741913: lv.KEY.END,     # Keypad 1
+                    1073741914: lv.KEY.DOWN,    # Keypad 2
+                    1073741915: lv.KEY.PREV,    # Keypad 3
+                    1073741916: lv.KEY.LEFT,    # Keypad 4
+                    1073741917: KEY_5,          # Keypad 5
+                    1073741918: lv.KEY.RIGHT,   # Keypad 6
+                    1073741919: lv.KEY.HOME,    # Keypad 7
+                    1073741920: lv.KEY.UP,      # Keypad 8
+                    1073741921: lv.KEY.NEXT,    # Keypad 9
+                    1073741922: KEY_INSERT,     # Keypad 0
+                    1073741923: lv.KEY.DEL      # Keypad .
                 }
 
             self.__last_key = mapping[key]
+            # Apply Shift for keypad symbols if applicable
+            if mod & MOD_KEY_SHIFT and self.__last_key in SHIFT_KEY_MAP:
+                self.__last_key = SHIFT_KEY_MAP[self.__last_key]
         else:
             mapping = {
                 KEY_BACKSPACE: lv.KEY.BACKSPACE,  # NOQA
@@ -295,4 +339,3 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
 
     def _get_key(self):
         return self.__current_state, self.__last_key
-
