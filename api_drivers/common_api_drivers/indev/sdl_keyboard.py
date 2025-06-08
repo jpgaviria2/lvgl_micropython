@@ -5,7 +5,6 @@ import lvgl as lv
 import micropython  # NOQA  # NOQA
 import keypad_framework
 
-
 KEY_UNKNOWN = 0
 KEY_BACKSPACE = 8  # LV_KEY_BACKSPACE
 KEY_TAB = 9  # LV_KEY_NEXT
@@ -206,11 +205,23 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
 
         self._py_disp_drv._data_bus.register_keypad_callback(self._keypad_cb)  # NOQA
 
+        self.paste_text_callback = None
+
+    def set_paste_text_callback(self, callback):
+        self.paste_text_callback = callback
+
     def set_mode(self, mode):
         self._indev_drv.set_mode(mode)  # NOQA
 
     def _keypad_cb(self, *args):
-        _, state, key, mod = args
+        if len(args) == 5:  # Special case for paste
+            _, state, key, mod, clipboard_text = args
+            print(f"got clipboard paste arg: {clipboard_text}")
+            if self.paste_text_callback and state == 1 and key == 118 and mod & MOD_KEY_CTRL:  # CTRL-V
+                self.paste_text_callback(clipboard_text)
+            return
+        else:
+            _, state, key, mod = args
         print(f"sdl_keyboard.py _keypad_cb got {_}, {state} {key} {mod}")
 
         # Skip modifier keys and SDL-specific large keycodes (>= 2^30), except keypad, nav, and func keys

@@ -182,6 +182,15 @@
         self->panel_io_config.bytes_per_pixel = bpp / 8;
         self->texture = SDL_CreateTexture(self->renderer, (SDL_PixelFormatEnum)buffer_size, SDL_TEXTUREACCESS_STREAMING, width, height);
         SDL_SetTextureBlendMode(self->texture, SDL_BLENDMODE_BLEND);
+
+        // Check for SDL_WINDOW_FULLSCREEN environment variable
+        if (getenv("SDL_WINDOW_FULLSCREEN") != NULL) {
+            SDL_SetWindowFullscreen(self->window, SDL_WINDOW_FULLSCREEN);
+        }
+        // Set arrow cursor
+        SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+        SDL_SetCursor(cursor);
+
         SDL_SetWindowSize(self->window, width, height);
 
         self->rgb565_byte_swap = false;
@@ -378,6 +387,29 @@
 
             case SDL_KEYDOWN:
             case SDL_KEYUP:
+                // Quick CTRL-V for paste handling:
+                if (event->key.keysym.sym == SDLK_v && (event->key.keysym.mod & KMOD_CTRL)) {
+                    // Retrieve clipboard text
+                    const char* clipboard_text = SDL_GetClipboardText();
+                    if (clipboard_text) {
+                        // Pass clipboard text to MicroPython
+                        static char clipboard_buffer[1024];
+                        strncpy(clipboard_buffer, clipboard_text, sizeof(clipboard_buffer) - 1);
+                        clipboard_buffer[sizeof(clipboard_buffer) - 1] = '\0'; // Ensure null-termination
+                        SDL_free((void*)clipboard_text); // Free SDL-allocated memory
+                        // Call keypad callback with a special flag for paste
+                        mp_obj_t args[5] = {
+                            mp_obj_new_int_from_uint(event->type),
+                            mp_obj_new_int_from_uint(event->key.state),
+                            mp_obj_new_int(event->key.keysym.sym),
+                            mp_obj_new_int_from_uint(event->key.keysym.mod),
+                            mp_obj_new_str(clipboard_buffer, strlen(clipboard_buffer))
+                        };
+                        mp_call_function_n_kw(self->keypad_callback, 5, 0, args);
+                        return 1; // Event handled
+                    }
+                }
+
                 if (event->key.windowID != window_id) return 0;
                 if (self->keypad_callback == mp_const_none) return 0;
 
