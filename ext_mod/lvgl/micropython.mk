@@ -15,7 +15,8 @@ CFLAGS_USERMOD += -I$(LVGL_DIR)
 CFLAGS_USERMOD += -I$(LIB_DIR)
 
 
-ifdef $(LV_CFLAGS)
+#ifdef $(LV_CFLAGS)
+ifdef LV_CFLAGS
     CFLAGS_USERMOD += $(LV_CFLAGS)
 endif
 
