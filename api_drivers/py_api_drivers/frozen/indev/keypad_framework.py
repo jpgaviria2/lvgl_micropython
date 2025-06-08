@@ -7,6 +7,7 @@ import display_driver_framework
 
 class KeypadDriver(_indev_base.IndevBase):
     def __init__(self):  # NOQA
+        super().__init__()
         if not lv.is_initialized():
             lv.init()
 
@@ -39,9 +40,6 @@ class KeypadDriver(_indev_base.IndevBase):
         indev_drv.set_display(disp)  # NOQA
         indev_drv.enable(True)  # NOQA
         self._indev_drv = indev_drv
-
-        super().__init__()
-        self._set_type(lv.INDEV_TYPE.KEYPAD)  # NOQA
 
     def _get_key(self):
         # this method needs to be overridden.
