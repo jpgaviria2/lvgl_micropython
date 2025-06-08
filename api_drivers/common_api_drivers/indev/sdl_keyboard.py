@@ -159,8 +159,10 @@ MOD_KEY_ALT = MOD_KEY_LALT | MOD_KEY_RALT
 MOD_KEY_META = MOD_KEY_LMETA | MOD_KEY_RMETA
 
 # SDL keycode ranges
-SDL_ARROW_KEY_START = 1073741903  # Right Arrow
-SDL_ARROW_KEY_END = 1073741906    # Down Arrow
+SDL_NAV_KEY_START = 1073741897   # Insert
+SDL_NAV_KEY_END = 1073741906     # Down Arrow
+SDL_FUNC_KEY_START = 1073741882  # F1
+SDL_FUNC_KEY_END = 1073741893    # F12
 SDL_KEYPAD_KEY_START = 1073741908 # Keypad /
 SDL_KEYPAD_KEY_END = 1073741923   # Keypad .
 
@@ -211,11 +213,12 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
         _, state, key, mod = args
         print(f"sdl_keyboard.py _keypad_cb got {_}, {state} {key} {mod}")
 
-        # Skip modifier keys and SDL-specific large keycodes (>= 2^30), except keypad and arrow keys
+        # Skip modifier keys and SDL-specific large keycodes (>= 2^30), except keypad, nav, and func keys
         if (key in {KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL, KEY_LALT, KEY_RALT,
                     KEY_LMETA, KEY_RMETA, KEY_LSUPER, KEY_RSUPER, KEY_MODE, KEY_COMPOSE,
                     KEY_NUMLOCK, KEY_CAPSLOCK, KEY_SCROLLOCK} or
-                (key >= 1 << 30 and not (SDL_ARROW_KEY_START <= key <= SDL_ARROW_KEY_END or
+                (key >= 1 << 30 and not (SDL_NAV_KEY_START <= key <= SDL_NAV_KEY_END or
+                                         SDL_FUNC_KEY_START <= key <= SDL_FUNC_KEY_END or
                                          SDL_KEYPAD_KEY_START <= key <= SDL_KEYPAD_KEY_END))):
             self.__last_key = -1  # Do not send modifier keys to LVGL
             return
@@ -318,10 +321,28 @@ class SDLKeyboard(keypad_framework.KeypadDriver):
                 KEY_END: lv.KEY.END,  # NOQA
                 KEY_PAGEDOWN: lv.KEY.PREV,  # NOQA
                 KEY_PAGEUP: lv.KEY.NEXT,  # NOQA
+                1073741897: KEY_INSERT,     # SDL Insert
+                1073741898: lv.KEY.HOME,    # SDL Home
+                1073741899: lv.KEY.NEXT,    # SDL PageUp
+                1073741900: lv.KEY.DEL,     # SDL Delete (unconfirmed)
+                1073741901: lv.KEY.END,     # SDL End
+                1073741902: lv.KEY.PREV,    # SDL PageDown
                 1073741903: lv.KEY.RIGHT,   # SDL Right Arrow
                 1073741904: lv.KEY.LEFT,    # SDL Left Arrow
                 1073741905: lv.KEY.UP,      # SDL Up Arrow
-                1073741906: lv.KEY.DOWN     # SDL Down Arrow
+                1073741906: lv.KEY.DOWN,    # SDL Down Arrow
+                1073741882: KEY_F1,         # SDL F1
+                1073741883: KEY_F2,         # SDL F2
+                1073741884: KEY_F3,         # SDL F3
+                1073741885: KEY_F4,         # SDL F4
+                1073741886: KEY_F5,         # SDL F5
+                1073741887: KEY_F6,         # SDL F6
+                1073741888: KEY_F7,         # SDL F7
+                1073741889: KEY_F8,         # SDL F8
+                1073741890: KEY_F9,         # SDL F9
+                1073741891: KEY_F10,        # SDL F10
+                1073741892: KEY_F11,        # SDL F11
+                1073741893: KEY_F12         # SDL F12
             }
 
             # Handle Shift or Caps Lock for letters and symbols
