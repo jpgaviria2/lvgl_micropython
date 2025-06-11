@@ -14,7 +14,7 @@
     #define MICROPY_SDL  0
 #endif
 #ifndef MICROPY_FFMPEG
-    #define MICROPY_FFMPEG  0
+    #define MICROPY_FFMPEG  0 // works on unix/desktop but not on esp32 (conflicting time.h time_t in /home/user/sources/lvgl_micropython/lib/esp-idf/components/mbedtls/mbedtls/include/mbedtls/platform_time.h)
 #endif
 #ifndef MICROPY_RLOTTIE
     #define MICROPY_RLOTTIE  0
@@ -23,7 +23,9 @@
     #define MICROPY_TINY_TTF  0
 #endif
 #ifndef MICROPY_CACHE_SIZE
-    #define MICROPY_CACHE_SIZE  50 * 64 * 64 * 2 // 50 images of 64x64 pixels at 2 bytes per pixel
+    //#define MICROPY_CACHE_SIZE  50 * 64 * 64 * 2 // 50 images of 64x64 pixels at 2 bytes per pixel
+    //#define MICROPY_CACHE_SIZE 1320000 // one image of 1100x600 pixels at 2 bytes per pixel
+    #define MICROPY_CACHE_SIZE 2518040 // one image of 1058x595 pixels at 4 bytes per pixel
 #endif
 #ifndef MICROPY_COLOR_DEPTH
     #define MICROPY_COLOR_DEPTH  16
@@ -304,7 +306,9 @@ extern void *mp_lv_roots;
     *LV_LOG_LEVEL_USER        Only logs added by the user
     *LV_LOG_LEVEL_NONE        Do not log anything*/
     // // 0 is trace, 1 is info, 2 is warn, 3 is error, 4 is user (FPS is here as 'sysmon' user)
-    #define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
+    // trace is useful but logs a LOT for every screen draw...
+    //#define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
+    #define LV_LOG_LEVEL LV_LOG_LEVEL_INFO
 
     /*1: Print the log with 'printf';
     *0: User need to register a callback with `lv_log_register_print_cb()`*/
@@ -798,7 +802,7 @@ extern void *mp_lv_roots;
 
 /* libjpeg-turbo decoder library.
  * Supports complete JPEG specifications and high-performance JPEG decoding. */
-#define LV_USE_LIBJPEG_TURBO 0
+#define LV_USE_LIBJPEG_TURBO 0  // needs LDFLAGS += -ljpeg in MicroPython's Makefile for this port. Only got it working on unix, not esp32 yet, needs libjpeg probably.
 
 /*GIF decoder library*/
 #define LV_USE_GIF 1
