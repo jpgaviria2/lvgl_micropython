@@ -1,0 +1,81 @@
+[MCU.esp32]
+BOARD = "ESP32_GENERIC_S3"
+BOARD_VARIANT = "SPIRAM_OCT"
+flash_size = 16
+octal_flash = true
+enable_cdc_repl = 'y'
+enable_uart_repl = 'y'
+uart_repl_bitrate = 115200
+
+# Prefer higher performance settings for S3 with embedded PSRAM
+CONFIG_ESPTOOLPY_FLASHMODE_QIO = "y"
+CONFIG_ESPTOOLPY_FLASHFREQ_120M = "y"
+CONFIG_SPIRAM_SPEED_120M = "y"
+CONFIG_SPIRAM_FETCH_INSTRUCTIONS = "y"
+CONFIG_SPIRAM_RODATA = "y"
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B = "y"
+
+
+[SPI.Bus.spi_bus]
+host = 1                # SPI2 on ESP32-S3
+mosi = 1                # LCD_MOSI
+miso = 2                # LCD_MISO
+sck = 5                 # LCD_SCLK
+
+
+[SPIBus.display_bus]
+spi_bus = "spi_bus"
+freq = 80000000
+dc = 3                  # LCD_DC
+cs = -1                 # LCD_CS (-1 if tied low)
+
+
+[I2C.Bus.i2c_bus]
+host = 0
+scl = 7                 # TP_SCL
+sda = 8                 # TP_SDA
+freq = 400000
+
+
+[I2C.Device.touch_device]
+bus = "i2c_bus"
+dev_id = "ft6x36.I2C_ADDR"
+reg_bits = "ft6x36.BITS"
+
+
+[I2C.Device.tca_device]
+bus = "i2c_bus"
+dev_id = 32             # 0x20
+reg_bits = 8
+
+
+[tca9554.Pin.set_device]
+params = ["tca_device"]
+
+
+[ST7796.display]
+data_bus = "display_bus"
+display_width = 320
+display_height = 480
+backlight_pin = 6       # LCD_BL (PWM capable)
+color_space = "lv.COLOR_FORMAT.RGB565"
+color_byte_order = "st7796.BYTE_ORDER_BGR"
+rgb565_byte_swap = true
+
+
+[display.set_power]
+params = [true]
+
+
+[display.init]
+params = []
+
+
+[FT6x36.indev]
+device = "touch_device"
+
+
+[task_handler.TaskHandler]
+params=[]
+
+
