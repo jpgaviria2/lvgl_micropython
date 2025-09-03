@@ -189,12 +189,29 @@ class DisplayDriver:
             self._disp_drv.set_driver_data(self)
 
             if frame_buffer1 is None:
-                buf_size = int(
-                    display_width *
-                    display_height *
-                    lv.color_format_get_size(color_space)
-                )
-                buf_size = int(buf_size // 10)
+                # FIXED: Calculate buffer size correctly
+                # The bug was here: lv.color_format_get_size(color_space) returns corrupted value
+                
+                # Use hardcoded values for known color formats instead of buggy LVGL function
+                if color_space == lv.COLOR_FORMAT.RGB565:
+                    bytes_per_pixel = 2
+                elif color_space == lv.COLOR_FORMAT.RGB888:
+                    bytes_per_pixel = 3
+                elif color_space == lv.COLOR_FORMAT.ARGB8888:
+                    bytes_per_pixel = 4
+                else:
+                    # Fallback - assume RGB565
+                    bytes_per_pixel = 2
+                    print(f"⚠ Unknown color format {color_space}, assuming RGB565")
+                
+                # Calculate buffer size with CORRECT bytes per pixel
+                buf_size = int(display_width * display_height * bytes_per_pixel)
+                buf_size = int(buf_size // 10)  # Use 1/10th of full screen
+                
+                print(f"✓ FIXED: Calculated buffer size: {buf_size} bytes")
+                print(f"  Display: {display_width}x{display_height}")
+                print(f"  Color format: {color_space} ({bytes_per_pixel} bytes/pixel)")
+                print(f"  Buffer size: {buf_size} bytes (not 1GB+!)")
                 gc.collect()
 
                 for flags in (

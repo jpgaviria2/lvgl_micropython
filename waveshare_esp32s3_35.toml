@@ -1,0 +1,38 @@
+# Waveshare ESP32-S3 3.5" Touch Display Configuration
+# Hardware: ESP32-S3 with ST7796 display and FT6x36 touch controller
+
+[mcu]
+mcu = "esp32s3"
+
+[mcu.esp32s3]
+board = "ESP32_GENERIC_S3"
+board_variant = "SPIRAM_OCT"
+
+[display]
+display_ic = "st7796"
+
+[display.st7796]
+width = 320
+height = 480
+data_bus_type = "spi"
+spi_host = 1
+spi_mosi = 1
+spi_miso = 2  
+spi_sclk = 5
+dc_pin = 3
+cs_pin = -1
+reset_pin = 4
+backlight_pin = 6
+color_order = "RGB"
+swap_xy = true
+invert_colors = false
+rgb565_byte_swap = true
+
+[indev]
+indev_ic = "ft6x36"
+
+[indev.ft6x36]
+i2c_host = 0
+i2c_sda = 8
+i2c_scl = 7
+i2c_freq = 400000
