@@ -1,38 +1,65 @@
 # Waveshare ESP32-S3 3.5" Touch Display Configuration
 # Hardware: ESP32-S3 with ST7796 display and FT6x36 touch controller
 
-[mcu]
-mcu = "esp32s3"
+[MCU.esp32]
+BOARD = "ESP32_GENERIC_S3"
+BOARD_VARIANT = "SPIRAM_OCT"
+flash_size = 8
+enable_jtag_repl = 'n'
+enable_cdc_repl = 'n'
+enable_uart_repl = 'y'
+uart_repl_bitrate = 115200
+CONFIG_FREERTOS_HZ = 1000
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240 = "y"
+CONFIG_ESPTOOLPY_FLASHMODE_QIO = "y"
+CONFIG_ESPTOOLPY_FLASHFREQ_80M = "y"
+CONFIG_SPIRAM_SPEED_80M = "y"
+CONFIG_COMPILER_OPTIMIZATION_PERF = "y"
 
-[mcu.esp32s3]
-board = "ESP32_GENERIC_S3"
-board_variant = "SPIRAM_OCT"
+[SPI.Bus.spi_bus]
+host = 1
+mosi = 1
+miso = 2
+sck = 5
 
-[display]
-display_ic = "st7796"
+[SPIBus.display_bus]
+spi_bus = "spi_bus"
+freq = 5000000
+dc = 3
+cs = -1
 
-[display.st7796]
-width = 320
-height = 480
-data_bus_type = "spi"
-spi_host = 1
-spi_mosi = 1
-spi_miso = 2  
-spi_sclk = 5
-dc_pin = 3
-cs_pin = -1
-reset_pin = 4
+[I2C.Bus.i2c_bus]
+host = 0
+scl = 7
+sda = 8
+freq = 400000
+
+[I2C.Device.indev_device]
+bus = "i2c_bus"
+dev_id = "ft6x36.I2C_ADDR"
+reg_bits = "ft6x36.BITS"
+
+[ST7796.display]
+data_bus = "display_bus"
+display_width = 320
+display_height = 480
 backlight_pin = 6
-color_order = "RGB"
-swap_xy = true
-invert_colors = false
+reset_pin = 4
+color_space = "lv.COLOR_FORMAT.RGB565"
+color_byte_order = "st7796.BYTE_ORDER_RGB"
 rgb565_byte_swap = true
 
-[indev]
-indev_ic = "ft6x36"
+[display.set_power]
+params = [true]
 
-[indev.ft6x36]
-i2c_host = 0
-i2c_sda = 8
-i2c_scl = 7
-i2c_freq = 400000
+[display.init]
+params = []
+
+[FT6x36.indev]
+device = "indev_device"
+
+[display.set_backlight]
+params = [100]
+
+[task_handler.TaskHandler]
+params = []
